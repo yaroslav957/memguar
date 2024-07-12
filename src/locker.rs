@@ -9,14 +9,14 @@ use libc::{c_int, c_void, mlock, munlock};
 /// useful when dealing with large buffers or when performance is critical,
 /// when working with a small amount of RAM.
 #[repr(transparent)]
-pub(crate) struct Locker<C: AsMut<[T]>, T> {
+pub struct Locker<C: AsMut<[T]>, T> {
     buf: C,
     item_type: PhantomData<T>,
 }
 
 impl<C: AsMut<[T]>, T> Locker<C, T> {
     /// `Locker` constructor.
-    pub(crate) fn new(buf: C) -> Self {
+    pub fn new(buf: C) -> Self {
         Self {
             buf,
             item_type: PhantomData,
@@ -25,7 +25,7 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
 
     /// If `lock` is successful, the buffer's page locked,
     /// preventing it from being swapped out to disk/swap-zone.
-    pub(crate) fn lock(&mut self) -> Result<(), LockError> {
+    pub fn lock(&mut self) -> Result<(), LockError> {
         let buf = self.buf.as_mut();
         let ptr = buf.as_mut_ptr() as *mut c_void;
         let len = buf.len() * size_of::<T>();
@@ -39,10 +39,10 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
         }
     }
 
-    /// If unlock is successful, the buffer's page is unlocked,
+    /// If `unlock` is successful, the buffer's page is unlocked,
     /// allowing the system to perform additional optimizations,
     /// such as moving pages to the swap file or merging adjacent locked memory regions.
-    pub(crate) fn unlock(&mut self) -> Result<(), LockError> {
+    pub fn unlock(&mut self) -> Result<(), LockError> {
         let buf = self.buf.as_mut();
         let ptr = buf.as_mut_ptr() as *mut c_void;
         let len = buf.len() * size_of::<T>();
@@ -65,7 +65,7 @@ impl<C: AsMut<[T]>, T> Drop for Locker<C, T> {
 
 /// Parsed types of `mlock` and `munlock` errors
 #[derive(Debug)]
-pub(crate) enum LockError {
+pub enum LockError {
     EPERM,
     EINTR,
     EIO,
