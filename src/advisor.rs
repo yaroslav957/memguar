@@ -11,8 +11,8 @@ use crate::advisor::Advise::DontNeed;
 /// It can help the system to optimize memory usage and performance
 #[repr(transparent)]
 pub struct Adviser<C: AsMut<[T]>, T> {
-    buf: C,
-    item_type: PhantomData<T>,
+    pub buf: C,
+    pub item_type: PhantomData<T>,
 }
 
 impl<C: AsMut<[T]>, T> Adviser<C, T> {

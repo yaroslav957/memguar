@@ -10,8 +10,8 @@ use libc::{c_int, c_void, mlock, munlock};
 /// when working with a small amount of RAM.
 #[repr(transparent)]
 pub struct Locker<C: AsMut<[T]>, T> {
-    buf: C,
-    item_type: PhantomData<T>,
+    pub buf: C,
+    pub item_type: PhantomData<T>,
 }
 
 impl<C: AsMut<[T]>, T> Locker<C, T> {
@@ -32,7 +32,7 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
         let result = unsafe {
             mlock(ptr, len)
         };
-        
+
         match result {
             0 => Ok(()),
             result => Err(LockError::from(result)),
@@ -49,7 +49,7 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
         let result = unsafe {
             munlock(ptr, len)
         };
-        
+
         match result {
             0 => Ok(()),
             result => Err(LockError::from(result)),
