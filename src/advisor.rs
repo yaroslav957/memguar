@@ -4,8 +4,11 @@ use std::mem::size_of;
 
 use libc::{c_int, c_void, posix_madvise};
 
-use crate::wrappers::advisor::Advise::DontNeed;
+use crate::advisor::Advise::DontNeed;
 
+/// A wrapper-struct Adviser that is used to advise the system
+/// about the expected behavior of memory access patterns of the buffer's page.
+/// It can help the system to optimize memory usage and performance
 #[repr(transparent)]
 pub(crate) struct Adviser<C: AsMut<[T]>, T> {
     buf: C,
@@ -20,7 +23,9 @@ impl<C: AsMut<[T]>, T> Adviser<C, T> {
         }
     }
 
-    /// If `syscall_advise` is successful, it advises the system that the application will need the specified region for the given range in the near future.
+    /// If `syscall_advise` is successful, it allows the system to apply specific optimizations to the page,
+    /// based on the specified flag, such as moving it to the swap file
+    /// or merging it with adjacent pages.
     pub(crate) fn syscall_advise(&mut self, advise: Advise) -> Result<(), AdviseError> {
         let buf = self.buf.as_mut();
         let ptr = buf.as_mut_ptr() as *mut c_void;
@@ -41,14 +46,14 @@ impl<C: AsMut<[T]>, T> Drop for Adviser<C, T> {
         self.syscall_advise(DontNeed).unwrap()
     }
 }
-
+/// Advises for page
 #[repr(i32)]
 pub(crate) enum Advise {
     Free = 8,
     DontNeed = 4,
     WillNeed = 3,
 }
-
+// Parsed types of `syscall_advise` errors
 #[derive(Debug)]
 pub(crate) enum AdviseError {
     EFAULT,
