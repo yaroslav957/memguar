@@ -49,9 +49,8 @@ impl<C: AsMut<[T]>, T> Drop for Adviser<C, T> {
 /// Advises for page
 #[repr(i32)]
 pub(crate) enum Advise {
-    Free = 8,
-    DontNeed = 4,
     WillNeed = 3,
+    DontNeed = 4,
 }
 // Parsed types of `syscall_advise` errors
 #[derive(Debug)]

@@ -1,4 +1,4 @@
-use crate::advisor::Advise::DontNeed;
+use crate::advisor::Advise::{DontNeed, Free};
 use crate::advisor::Adviser;
 use crate::locker::Locker;
 
