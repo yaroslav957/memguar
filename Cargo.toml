@@ -2,7 +2,7 @@
 name = "memguar"
 authors = ["Yaroslav957"]
 categories = ["memory-management"]
-repository = ""
+repository = "https://github.com/yaroslav957/memguar"
 keywords = ["std", "memory", "swap", "libc", "unix"]
 version = "0.0.1"
 license = "MIT"
