@@ -1,0 +1,13 @@
+[package]
+name = "memguar"
+authors = ["Yaroslav957"]
+categories = ["memory-management"]
+repository = ""
+keywords = ["std", "memory", "swap", "libc", "unix"]
+version = "0.0.1"
+license = "MIT"
+edition = "2021"
+
+[dependencies.libc]
+version = "*"
+features = ["default"]
