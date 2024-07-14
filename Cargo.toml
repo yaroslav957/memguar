@@ -10,5 +10,5 @@ license = "MIT"
 edition = "2021"
 
 [dependencies.libc]
-version = "*"
+version = "0.2.155"
 features = ["default"]
