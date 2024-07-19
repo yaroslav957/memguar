@@ -1,14 +1,20 @@
 [package]
 name = "memguar"
+version = "0.0.2"
+edition = "2021"
+description = "A crate that helps to optimize IO of large buffers in near-OOM state or with small amount of RAM"
 authors = ["Yaroslav957"]
 categories = ["memory-management"]
-repository = "https://github.com/yaroslav957/memguar"
-description = "A crate that helps to optimize IO of large buffers in near-OOM state or with small amount of RAM "
 keywords = ["std", "memory", "swap", "libc", "unix"]
-version = "0.0.1"
+repository = "https://github.com/yaroslav957/memguar"
+documentation = "https://crates.io/crates/memguar"
+readme = "README.md"
 license = "MIT"
-edition = "2021"
 
 [dependencies.libc]
 version = "0.2.155"
-features = ["default"]
+default-features = true
+
+[dependencies.tempfile]
+version = "3.10.1"
+default-features = true

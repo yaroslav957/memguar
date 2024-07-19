@@ -3,19 +3,27 @@ use std::mem::size_of;
 
 use libc::{c_int, c_void, mlock, munlock};
 
-/// Wrapper-Struct `Locker` that is used to lock the buffer's page.
+/// A wrapper-Struct `Locker` that is used to lock the buffer's page.
 /// Locking memory pages ensures that those pages are not moved to the page file,
-/// which can help avoid I/O delays when accessing memory in OOM state. This is particularly
-/// useful when dealing with large buffers or when performance is critical,
-/// when working with a small amount of RAM.
+/// # Examples
+///
+/// ```
+/// use memguar::locker::Locker;
+///
+/// let buf = [420; 16_000]; 
+/// let mut locked_buf = Locker::new(buf);
+/// 
+/// locked_buf
+///     .lock()
+///     .unwrap()
+/// ```
 #[repr(transparent)]
 pub struct Locker<C: AsMut<[T]>, T> {
     pub buf: C,
-    pub item_type: PhantomData<T>,
+    item_type: PhantomData<T>,
 }
 
 impl<C: AsMut<[T]>, T> Locker<C, T> {
-    /// `Locker` constructor.
     pub fn new(buf: C) -> Self {
         Self {
             buf,
@@ -59,7 +67,8 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
 
 impl<C: AsMut<[T]>, T> Drop for Locker<C, T> {
     fn drop(&mut self) {
-        self.unlock().unwrap()
+        self.unlock()
+            .expect("Cant unlock while dropping")
     }
 }
 

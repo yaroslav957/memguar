@@ -4,15 +4,27 @@ use std::mem::size_of;
 
 use libc::{c_int, c_void, posix_madvise};
 
-use crate::advisor::Advise::DontNeed;
+use crate::wrappers::advisor::Advise::DontNeed;
 
 /// A wrapper-struct `Adviser` that is used to advise the system
 /// about the expected behavior of memory access patterns of the buffer's page.
-/// It can help the system to optimize memory usage and performance
+/// # Examples
+///
+/// ```
+/// use memguar::advisor::Advise::DontNeed;
+/// use memguar::advisor::Adviser;
+///
+/// let buf = [420; 16_000]; 
+/// let mut advised_buf = Adviser::new(buf);
+///
+/// advised_buf
+///     .syscall_advise(DontNeed)
+///     .unwrap();
+/// ```
 #[repr(transparent)]
 pub struct Adviser<C: AsMut<[T]>, T> {
     pub buf: C,
-    pub item_type: PhantomData<T>,
+    item_type: PhantomData<T>,
 }
 
 impl<C: AsMut<[T]>, T> Adviser<C, T> {
@@ -43,7 +55,8 @@ impl<C: AsMut<[T]>, T> Adviser<C, T> {
 
 impl<C: AsMut<[T]>, T> Drop for Adviser<C, T> {
     fn drop(&mut self) {
-        self.syscall_advise(DontNeed).unwrap()
+        self.syscall_advise(DontNeed)
+            .expect("Cant give advise while dropping")
     }
 }
 /// Advises for page
