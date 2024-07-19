@@ -1,3 +1,5 @@
+//! A crate that helps to optimize large buffers in near-OOM state or with small amount of RAM
+
 pub use file::*;
 pub use wrappers::*;
 

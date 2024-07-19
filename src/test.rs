@@ -1,31 +1,31 @@
+use crate::advisor::*;
 use crate::advisor::Advise::DontNeed;
-use crate::advisor::Adviser;
-use crate::locker::Locker;
+use crate::locker::*;
 use crate::mapper::MappedBuffer;
 
 #[test]
-pub fn locker() {
+pub fn locker() -> Result<(), LockError> {
     let buf = [420; 16_000];
     let mut locked_buf = Locker::new(buf);
 
     locked_buf
         .lock()
-        .unwrap()
 }
 
 #[test]
-pub fn advisor() {
+pub fn advisor() -> Result<(), AdviseError> {
     let buf = [420; 16_000];
     let mut advised_buf = Adviser::new(buf);
 
     advised_buf
         .syscall_advise(DontNeed)
-        .unwrap();
 }
 
 #[test]
-pub fn mapper() {
+pub fn mapper() -> Result<(), std::io::Error> {
     let buf = [420; 16_000];
-    let mapped_buf = MappedBuffer::new(buf);
-    let _slice = &mapped_buf[0..=420];
+    let mapped_buf = MappedBuffer::new(buf)?;
+    let _buf = mapped_buf.receive();
+    
+    Ok(())
 }

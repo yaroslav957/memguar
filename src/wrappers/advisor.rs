@@ -1,6 +1,5 @@
 use std::convert::AsMut;
 use std::marker::PhantomData;
-use std::mem::size_of;
 
 use libc::{c_int, c_void, posix_madvise};
 
@@ -40,8 +39,9 @@ impl<C: AsMut<[T]>, T> Adviser<C, T> {
     /// or merging it with adjacent pages.
     pub fn syscall_advise(&mut self, advise: Advise) -> Result<(), AdviseError> {
         let buf = self.buf.as_mut();
+        assert!(size_of_val(buf) > 0, "Zero size buffer");
         let ptr = buf.as_mut_ptr() as *mut c_void;
-        let len = buf.len() * size_of::<T>();
+        let len = size_of_val(buf);
         let result = unsafe {
             posix_madvise(ptr, len, advise as c_int)
         };

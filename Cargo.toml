@@ -1,13 +1,13 @@
 [package]
 name = "memguar"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 description = "A crate that helps to optimize IO of large buffers in near-OOM state or with small amount of RAM"
 authors = ["Yaroslav957"]
 categories = ["memory-management"]
 keywords = ["std", "memory", "swap", "libc", "unix"]
 repository = "https://github.com/yaroslav957/memguar"
-documentation = "https://crates.io/crates/memguar"
+documentation = "https://docs.rs/memguar/latest/memguar/"
 readme = "README.md"
 license = "MIT"
 

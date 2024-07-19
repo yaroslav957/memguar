@@ -1,5 +1,4 @@
 use std::marker::PhantomData;
-use std::mem::size_of;
 
 use libc::{c_int, c_void, mlock, munlock};
 
@@ -12,7 +11,7 @@ use libc::{c_int, c_void, mlock, munlock};
 ///
 /// let buf = [420; 16_000]; 
 /// let mut locked_buf = Locker::new(buf);
-/// 
+///
 /// locked_buf
 ///     .lock()
 ///     .unwrap()
@@ -35,8 +34,9 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
     /// preventing it from being swapped out to disk/swap-zone.
     pub fn lock(&mut self) -> Result<(), LockError> {
         let buf = self.buf.as_mut();
+        assert!(size_of_val(buf) > 0, "Zero size buffer");
         let ptr = buf.as_mut_ptr() as *mut c_void;
-        let len = buf.len() * size_of::<T>();
+        let len = size_of_val(buf);
         let result = unsafe {
             mlock(ptr, len)
         };
@@ -52,8 +52,9 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
     /// such as moving pages to the swap file or merging adjacent locked memory regions.
     pub fn unlock(&mut self) -> Result<(), LockError> {
         let buf = self.buf.as_mut();
+        assert!(size_of_val(buf) > 0, "zero size buffer");
         let ptr = buf.as_mut_ptr() as *mut c_void;
-        let len = buf.len() * size_of::<T>();
+        let len = size_of_val(buf);
         let result = unsafe {
             munlock(ptr, len)
         };

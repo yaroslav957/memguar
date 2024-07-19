@@ -15,9 +15,12 @@ use tempfile::tempfile;
 /// ```
 /// use memguar::mapper::MappedBuffer;
 ///
-/// let buf = [420; 16_000];
-/// let mapped_buf = MappedBuffer::new(buf);
-/// let slice = &mapped_buf[0..=420];
+/// pub fn map_example() -> Result<(), std::io::Error> {
+///     let buf = [420; 16_000];
+///     let mapped_buf = MappedBuffer::new(buf)?;
+///
+///     Ok(())
+/// }
 /// ```
 pub struct MappedBuffer<T: Copy> {
     size: usize,
@@ -26,14 +29,13 @@ pub struct MappedBuffer<T: Copy> {
 }
 
 impl<T: Copy> MappedBuffer<T> {
-    pub fn new<B: AsRef<[T]>>(buf: B) -> Self {
+    pub fn new<B: AsRef<[T]>>(buf: B) -> Result<Self, std::io::Error> {
         let buf = buf.as_ref();
+        assert!(size_of_val(buf) > 0, "Zero size buffer");
         let size = size_of_val(buf);
-        let file = tempfile()
-            .unwrap();
+        let file = tempfile()?;
 
-        file.set_len(size as u64)
-            .unwrap();
+        file.set_len(size as u64)?;
 
         let ptr = unsafe {
             mmap(
@@ -46,15 +48,18 @@ impl<T: Copy> MappedBuffer<T> {
             )
         };
 
-        unsafe {
-            ptr::copy_nonoverlapping(buf.as_ptr(), ptr as *mut T, buf.len());
-        }
+        match ptr {
+            libc::MAP_FAILED => panic!("Map failed"),
+            _ => unsafe {
+                ptr::copy_nonoverlapping(buf.as_ptr(), ptr as *mut T, buf.len());
+            },
+        };
 
-        Self {
+        Ok(Self {
             ptr,
             size,
             _phantom: PhantomData,
-        }
+        })
     }
     /// If `receive` is successful, It returns a slice that represents the mapped buffer.
     /// # Examples
@@ -62,11 +67,16 @@ impl<T: Copy> MappedBuffer<T> {
     /// ```
     /// use memguar::mapper::MappedBuffer;
     ///
-    /// let buf = [420; 16_000];
-    /// let mapped_buf = MappedBuffer::new(buf);
-    /// let slice_buf = mapped_buf.receive();
+    /// pub fn receive_example() -> Result<(), std::io::Error> {
+    ///     let buf = [420; 16_000];
+    ///     let mapped_buf = MappedBuffer::new(buf)?;
+    ///     let _buf = mapped_buf.receive();
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     pub fn receive(&self) -> &[T] {
+        // Make it safer
         unsafe {
             std::slice::from_raw_parts(self.ptr as *const T, self.size / size_of::<T>())
         }
