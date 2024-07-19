@@ -5,5 +5,5 @@ including Linux, macOS, and other Unix-like operating systems.
 ### Usage
 ```rs
 [dependencies.memguar]
-version = "0.0.1"
+version = "0.0.2"
 ```
