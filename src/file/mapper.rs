@@ -1,7 +1,8 @@
+use std::{panic, ptr};
+use std::io::Error;
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::os::fd::AsRawFd;
-use std::ptr;
 
 use libc::{c_void, MAP_SHARED, mmap, munmap, PROT_READ, PROT_WRITE, size_t};
 use tempfile::tempfile;
@@ -29,7 +30,7 @@ pub struct MappedBuffer<T: Copy> {
 }
 
 impl<T: Copy> MappedBuffer<T> {
-    pub fn new<B: AsRef<[T]>>(buf: B) -> Result<Self, std::io::Error> {
+    pub fn new<B: AsRef<[T]>>(buf: B) -> Result<Self, Error> {
         let buf = buf.as_ref();
         assert!(size_of_val(buf) > 0, "Zero size buffer");
         let size = size_of_val(buf);
@@ -37,6 +38,8 @@ impl<T: Copy> MappedBuffer<T> {
 
         file.set_len(size as u64)?;
 
+        // SAFETY: FFI. Safe cast (`size as size_t` = usize as usize)
+        // Valid raw file descriptor for temp-phys file + processed `mmap` result
         let ptr = unsafe {
             mmap(
                 ptr::null_mut(),
@@ -49,10 +52,15 @@ impl<T: Copy> MappedBuffer<T> {
         };
 
         match ptr {
-            libc::MAP_FAILED => panic!("Map failed"),
-            _ => unsafe {
-                ptr::copy_nonoverlapping(buf.as_ptr(), ptr as *mut T, buf.len());
-            },
+            libc::MAP_FAILED => panic!("{}", Error::last_os_error()),
+            _ =>
+                if ptr.cast::<T>().is_aligned() {
+                    // SAFETY: The pointer `ptr` is valid for writing
+                    // `buf.len()` bytes and that these bytes are properly aligned for type `T`.
+                    unsafe {
+                        ptr::copy_nonoverlapping(buf.as_ptr(), ptr.cast(), buf.len());
+                    }
+                },
         };
 
         Ok(Self {
@@ -76,9 +84,10 @@ impl<T: Copy> MappedBuffer<T> {
     /// }
     /// ```
     pub fn receive(&self) -> &[T] {
-        // Make it safer
+        // SAFETY: The pointer `self.ptr` is valid for
+        // reading `self.size` bytes and that these bytes are properly aligned for type `T`.
         unsafe {
-            std::slice::from_raw_parts(self.ptr as *const T, self.size / size_of::<T>())
+            std::slice::from_raw_parts(self.ptr.cast(), self.size / size_of::<T>())
         }
     }
 }
@@ -93,6 +102,7 @@ impl<T: Copy> Deref for MappedBuffer<T> {
 
 impl<T: Copy> Drop for MappedBuffer<T> {
     fn drop(&mut self) {
+        // SAFETY: FFI. Valid ptr (*mut c_void) and size
         unsafe {
             munmap(self.ptr, self.size);
         }

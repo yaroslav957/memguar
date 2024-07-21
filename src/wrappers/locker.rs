@@ -37,6 +37,7 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
         assert!(size_of_val(buf) > 0, "Zero size buffer");
         let ptr = buf.as_mut_ptr() as *mut c_void;
         let len = size_of_val(buf);
+        // SAFETY: FFI. Valid ptr (*mut c_void) and len + processed `mclock` result
         let result = unsafe {
             mlock(ptr, len)
         };
@@ -55,6 +56,7 @@ impl<C: AsMut<[T]>, T> Locker<C, T> {
         assert!(size_of_val(buf) > 0, "zero size buffer");
         let ptr = buf.as_mut_ptr() as *mut c_void;
         let len = size_of_val(buf);
+        // SAFETY: FFI. Valid ptr (*mut c_void) and len + processed `munlock` result
         let result = unsafe {
             munlock(ptr, len)
         };

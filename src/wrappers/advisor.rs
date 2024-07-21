@@ -42,6 +42,7 @@ impl<C: AsMut<[T]>, T> Adviser<C, T> {
         assert!(size_of_val(buf) > 0, "Zero size buffer");
         let ptr = buf.as_mut_ptr() as *mut c_void;
         let len = size_of_val(buf);
+        // SAFETY: FFI. Valid ptr (*mut c_void) and len + processed `posix_madvise` result
         let result = unsafe {
             posix_madvise(ptr, len, advise as c_int)
         };
